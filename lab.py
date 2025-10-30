@@ -66,7 +66,9 @@ class QuantumLab:
             - Reconstruct U using: U = Σ λ_k |ψ_k⟩⟨ψ_k|
             - Use np.outer() for outer products
         """
-        pass
+        eigenvalues, eigenvectors = np.linalg.eig(U)
+        reconstructed_U = eigenvectors @ np.diag(eigenvalues) @ np.linalg.inv(eigenvectors)
+        return (eigenvalues, eigenvectors, reconstructed_U)
 
     # =========================================================================
     # Problem 2: Phase Kickback Circuit (2 points)
@@ -92,7 +94,12 @@ class QuantumLab:
             - Use qc.x(1) to initialize target to |1⟩
             - Use qc.cz(0, 1) for controlled-Z
         """
-        pass
+        qc = QuantumCircuit(2,2)
+        qc.h(0)
+        if target_state == '1':
+            qc.x(1)
+        qc.cz(0,1)
+        return qc
 
     # =========================================================================
     # Problem 3: Two-Qubit QFT Circuit (2.5 points)
@@ -117,7 +124,12 @@ class QuantumLab:
             - For 2 qubits, the controlled-phase angle is π/2
             - Use qc.swap(0, 1) if needed for qubit ordering
         """
-        pass
+        qc = QuantumCircuit(2,2)
+        qc.h(0)
+        qc.cp(np.pi/2, 0, 1)
+        qc.h(1)
+        qc.swap(0, 1)
+        return qc
 
     # =========================================================================
     # Problem 4: Using QFT from Circuit Library (1 point)
@@ -146,7 +158,14 @@ class QuantumLab:
             - Initialize state: use qc.x(i) for each '1' in initial_state_bits
             - Get statevector: Statevector.from_instruction(qc)
         """
-        pass
+        qc = QuantumCircuit(n_qubits,n_qubits)
+        for idx,bit in enumerate(initial_state_bits):
+            if bit == '1':
+                qc.x(idx)
+        qft_gate = QFTGate(n_qubits)
+        qc.append(qft_gate, range(n_qubits))
+        result = Statevector.from_instruction(qc)
+        return result.data
 
     # =========================================================================
     # Problem 5: Inverse QFT Circuit (0.5 points)
@@ -168,7 +187,19 @@ class QuantumLab:
             - Manually reverse: SWAP, H, CP(-angle), H
             - Both approaches are valid
         """
-        pass
+        qc = QuantumCircuit(2,2)
+        qc.swap(0,1)
+        qc.h(1)
+        qc.cp(-np.pi/2, 1, 0)
+        qc.h(0)
+
+        # qc = QuantumCircuit(2,2)
+        # qc.h(0)
+        # qc.cp(np.pi / 2, 0, 1)
+        # qc.h(1)
+        # qc.swap(0, 1)
+        # qc = qc.inverse()
+        return qc
 
     # =========================================================================
     # Problem 6: Two-Qubit Phase Estimation (2 points)
@@ -204,7 +235,23 @@ class QuantumLab:
             - Apply inverse QFT to qubits [0, 1]
             - Measure qubits 0 and 1 to classical bits 0 and 1
         """
-        pass
+        qc = QuantumCircuit(3,2)
+        #Initialize counting qubits and target state
+        qc.h([0,1])
+        if eigenstate == '1':
+            qc.x(2)
+        # Apply Controlled U
+        controlled_U = phase_gate.control(1)
+        qc.append(controlled_U,[2,1])
+        qc.append(controlled_U,[2,0])
+        qc.append(controlled_U,[2,0])
+        # Inverse QFT
+        qc.swap(0, 1)
+        qc.h(1)
+        qc.cp(-np.pi / 2, 1, 0)
+        qc.h(0)
+        qc.measure([0,1],[0,1])
+        return qc
 
 
 # =============================================================================
